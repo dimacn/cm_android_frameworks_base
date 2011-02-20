@@ -111,8 +111,8 @@ SensorDevice::SensorDevice()
 
     if (mSensorModule) {
 #ifdef ENABLE_SENSORS_COMPAT
-        if (!sensors_control_open(&mSensorModule->common, &mSensorControlDevice)) {
-            if (sensors_data_open(&mSensorModule->common, &mSensorDataDevice)) {
+        if (sensors_control_open(&mSensorModule->common, &mSensorControlDevice)) {
+            if (!sensors_data_open(&mSensorModule->common, &mSensorDataDevice)) {
                 LOGE("couldn't open data device in backwards-compat mode for module %s (%s)",
                         SENSORS_HARDWARE_MODULE_ID, strerror(-err));
             } else {
