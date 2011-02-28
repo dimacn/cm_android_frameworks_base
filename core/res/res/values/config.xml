@@ -39,6 +39,7 @@
        <item><xliff:g id="id">volume</xliff:g></item>
        <item><xliff:g id="id">headset</xliff:g></item>
        <item><xliff:g id="id">wifi</xliff:g></item>
+       <item><xliff:g id="id">wimax</xliff:g></item>
        <item><xliff:g id="id">cdma_eri</xliff:g></item>
        <item><xliff:g id="id">data_connection</xliff:g></item>
        <item><xliff:g id="id">phone_evdo_signal</xliff:g></item>
@@ -386,5 +387,8 @@
 
     <!-- Enable the screen-off animation -->
     <bool name="config_enableScreenOffAnimation">true</bool>
+
+    <!-- Configure rotary bottom margin -->
+    <integer name="config_rotaryMarginBottomDIP">60</integer>
 
 </resources>
