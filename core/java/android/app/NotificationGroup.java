@@ -19,6 +19,7 @@ package android.app;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/** @hide */
 public class NotificationGroup implements Parcelable {
 
     private String mName;
@@ -113,8 +115,12 @@ public class NotificationGroup implements Parcelable {
 
     public static NotificationGroup fromXml(XmlPullParser xpp) throws XmlPullParserException,
             IOException {
-        NotificationGroup notificationGroup = new NotificationGroup(xpp.getAttributeValue(null,
-                "name"));
+        return fromXml(xpp, null);
+    }
+    public static NotificationGroup fromXml(XmlPullParser xpp, Context context) throws XmlPullParserException,
+            IOException {
+        String attr = Profile.getAttrResString(xpp, context);
+        NotificationGroup notificationGroup = new NotificationGroup(attr);
         int event = xpp.next();
         while (event != XmlPullParser.END_TAG || !xpp.getName().equals("notificationGroup")) {
             if (event == XmlPullParser.START_TAG) {

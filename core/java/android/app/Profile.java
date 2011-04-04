@@ -19,6 +19,8 @@ package android.app;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import android.content.Context;
+import android.content.res.XmlResourceParser;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -38,6 +40,7 @@ public class Profile implements Parcelable {
 
     private static final String TAG = "Profile";
 
+    /** @hide */
     public static final Parcelable.Creator<Profile> CREATOR = new Parcelable.Creator<Profile>() {
         public Profile createFromParcel(Parcel in) {
             return new Profile(in);
@@ -49,6 +52,7 @@ public class Profile implements Parcelable {
         }
     };
 
+    /** @hide */
     public Profile(String name) {
         this.mName = name;
     }
@@ -57,10 +61,12 @@ public class Profile implements Parcelable {
         readFromParcel(in);
     }
 
+    /** @hide */
     public void ensureProfleGroup(String groupName) {
         ensureProfleGroup(groupName, false);
     }
 
+    /** @hide */
     public void ensureProfleGroup(String groupName, boolean defaultGroup) {
         if (!profileGroups.containsKey(groupName)) {
             ProfileGroup value = new ProfileGroup(groupName, defaultGroup);
@@ -68,6 +74,7 @@ public class Profile implements Parcelable {
         }
     }
 
+    /** @hide */
     private void addProfileGroup(ProfileGroup value) {
         profileGroups.put(value.getName(), value);
         if(value.isDefaultGroup()){
@@ -75,6 +82,7 @@ public class Profile implements Parcelable {
         }
     }
 
+    /** @hide */
     public void removeProfileGroup(String name) {
         if(!profileGroups.get(name).isDefaultGroup()){
             profileGroups.remove(name);
@@ -95,11 +103,13 @@ public class Profile implements Parcelable {
         return mDefaultGroup;
     }
 
+    /** @hide */
     @Override
     public int describeContents() {
         return 0;
     }
 
+    /** @hide */
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mName);
@@ -107,11 +117,15 @@ public class Profile implements Parcelable {
                 profileGroups.values().toArray(new Parcelable[profileGroups.size()]), flags);
     }
 
+    /** @hide */
     public void readFromParcel(Parcel in) {
         mName = in.readString();
         for (Parcelable group : in.readParcelableArray(null)) {
             ProfileGroup grp = (ProfileGroup) group;
             profileGroups.put(grp.getName(), grp);
+            if(grp.isDefaultGroup()){
+                mDefaultGroup = grp;
+            }
         }
     }
 
@@ -119,22 +133,26 @@ public class Profile implements Parcelable {
         return mName;
     }
 
+    /** @hide */
     public void setName(String name) {
         this.mName = name;
     }
 
+    /** @hide */
     public Notification processNotification(String groupName, Notification notification) {
         ProfileGroup profileGroupSettings = groupName == null ? mDefaultGroup : profileGroups.get(groupName);
         notification = profileGroupSettings.processNotification(notification);
         return notification;
     }
 
+    /** @hide */
     public String getXmlString() {
         StringBuilder builder = new StringBuilder();
         getXmlString(builder);
         return builder.toString();
     }
 
+    /** @hide */
     public void getXmlString(StringBuilder builder) {
         builder.append("<profile name=\"" + TextUtils.htmlEncode(getName()) + "\">\n");
         for (ProfileGroup pGroup : profileGroups.values()) {
@@ -143,14 +161,38 @@ public class Profile implements Parcelable {
         builder.append("</profile>\n");
     }
 
+    /** @hide */
+    public static String getAttrResString(XmlPullParser xpp, Context context) {
+        String attr = null;
+        if (xpp instanceof XmlResourceParser && context != null) {
+            XmlResourceParser xrp = (XmlResourceParser) xpp;
+            int resId = xrp.getAttributeResourceValue(null, "name", 0);
+            if (resId != 0) {
+                attr = context.getResources().getString(resId);
+            } else {
+                attr = xrp.getAttributeValue(null, "name");
+            }
+        } else {
+            attr = xpp.getAttributeValue(null, "name");
+        }
+        return attr;
+    }
+
+    /** @hide */
     public static Profile fromXml(XmlPullParser xpp) throws XmlPullParserException, IOException {
-        Profile profile = new Profile(xpp.getAttributeValue(null, "name"));
+        return fromXml(xpp, null);
+    }
+
+    /** @hide */
+    public static Profile fromXml(XmlPullParser xpp, Context context) throws XmlPullParserException, IOException {
+        String attr = getAttrResString(xpp, context);
+        Profile profile = new Profile(attr);
         int event = xpp.next();
         while (event != XmlPullParser.END_TAG) {
             if (event == XmlPullParser.START_TAG) {
                 String name = xpp.getName();
                 if (name.equals("profileGroup")) {
-                    ProfileGroup pg = ProfileGroup.fromXml(xpp);
+                    ProfileGroup pg = ProfileGroup.fromXml(xpp, context);
                     profile.addProfileGroup(pg);
                 }
             }
