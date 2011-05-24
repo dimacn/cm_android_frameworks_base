@@ -432,7 +432,8 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         } else {
             types = mDefaultApnTypes;
         }
-        mActiveApn = new ApnSetting(0, "", "", "", "", "", "", "", "", "", "", 0, types);
+        mActiveApn = new ApnSetting(0, "", "", "", "", "", "", "", "", "", "",
+                                    0, types, "IP", "IP");
 
         Message msg = obtainMessage();
         msg.what = EVENT_DATA_SETUP_COMPLETE;
@@ -800,9 +801,6 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         if (state == State.CONNECTED) {
             if (!mCdmaPhone.mSST.isConcurrentVoiceAndData()) {
                 startNetStatPoll();
-                if("sholes".equalsIgnoreCase(android.os.Build.DEVICE)) {
-                    cleanUpConnection(true, Phone.REASON_VOICE_CALL_ENDED);
-                }
                 phone.notifyDataConnection(Phone.REASON_VOICE_CALL_ENDED);
             } else {
                 // clean slate after call end.

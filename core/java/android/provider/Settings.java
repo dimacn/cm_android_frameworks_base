@@ -208,20 +208,6 @@ public final class Settings {
             "android.settings.WIFI_IP_SETTINGS";
 
     /**
-     * Activity Action: Show settings to allow configuration of Wimax.
-     * <p>
-     * In some cases, a matching Activity may not exist, so ensure you
-     * safeguard against this.
-     * <p>
-     * Input: Nothing.
-     * <p>
-     * Output: Nothing.
-     */
-    @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
-    public static final String ACTION_WIMAX_SETTINGS =
-            "android.settings.WIMAX_SETTINGS";
-
-    /**
      * Activity Action: Show settings to allow configuration of Bluetooth.
      * <p>
      * In some cases, a matching Activity may not exist, so ensure you
@@ -1119,14 +1105,15 @@ public final class Settings {
         public static final String RADIO_WIFI = "wifi";
 
         /**
-         * Constant for use in AIRPLANE_MODE_RADIOS to specify Wimax radio.
-         */
-        public static final String RADIO_WIMAX = "wimax";
-
-        /**
          * Constant for use in AIRPLANE_MODE_RADIOS to specify Cellular radio.
          */
         public static final String RADIO_CELL = "cell";
+
+        /**
+         * Constant for use in AIRPLANE_MODE_RADIOS to specify WiMAX radio.
+         * @hide
+         */
+        public static final String RADIO_WIMAX = "wimax";
 
         /**
          * A comma separated list of radios that need to be disabled when airplane mode
@@ -1582,6 +1569,13 @@ public final class Settings {
          * @hide
          */
         public static final String VOLUME_CONTROL_SILENT = "volume_contol_silent";
+
+        /**
+         * Whether notifications should vibrate during phone calls or not.
+         *
+         * @hide
+         */
+        public static final String VIBRATE_IN_CALL = "vibrate-in-call";
 
         /**
          * The mapping of stream type (integer) to its setting.
@@ -2126,6 +2120,16 @@ public final class Settings {
         public static final String LOCK_MMS_IN_MEMORY = "lock_mms_in_memory";
 
         /**
+         * Display style of AM/PM next to clock in status bar
+         * 0: Normal display (Eclair stock)
+         * 1: Small display (Froyo stock)
+         * 2: No display (Gingerbread stock)
+         * default: 2
+         * @hide
+         */
+        public static final String STATUS_BAR_AM_PM = "status_bar_am_pm";
+
+        /**
          * Whether to show the CM battery percentage implementation instead
          * of the stock battery icon
          * 0: don't show / show stock icon instead
@@ -2146,6 +2150,168 @@ public final class Settings {
         public static final String STATUS_BAR_CLOCK = "status_bar_clock";
 
         /**
+         * Whether to display the status bar on top or bottom
+         * 0: show status bar on top (default for most devices)
+         * 1: show status bar on bottom
+         * default: 0 - can be overridden via CMParts config.xml for some devices
+         * @hide
+         */
+        public static final String STATUS_BAR_BOTTOM = "status_bar_bottom";
+
+        /**
+         * Whether to add a dead zone to the middle of the status bar
+         * 0: no dead zone
+         * 1: enable dead zone
+         * default: 0
+         * @hide
+         */
+        public static final String STATUS_BAR_DEAD_ZONE = "status_bar_dead_zone";
+
+        /**
+         * Whether or not home is displayed in soft buttons.
+         * @hide
+         */
+        public static final String SOFT_BUTTON_SHOW_HOME = "soft_button_show_home";
+
+        /**
+         * Whether or not menu is displayed in soft buttons.
+         * @hide
+         */
+        public static final String SOFT_BUTTON_SHOW_MENU = "soft_button_show_menu";
+
+        /**
+         * Whether or not back is displayed in soft buttons.
+         * @hide
+         */
+        public static final String SOFT_BUTTON_SHOW_BACK = "soft_button_show_back";
+
+        /**
+         * Whether or not search is displayed in soft buttons.
+         * @hide
+         */
+        public static final String SOFT_BUTTON_SHOW_SEARCH = "soft_button_show_search";
+
+        /**
+         * Whether or not QUICK_NA is displayed in soft buttons.
+         * @hide
+         */
+        public static final String SOFT_BUTTON_SHOW_QUICK_NA = "soft_button_show_quick_na";
+
+        /**
+         * Whether to display the soft buttons on left side
+         * 0: shows them default right
+         * 1: shows them left (overlaps with date display when dragging notification area open)
+         * default: 0 - can be overridden via CMParts config.xml for some devices
+         * @hide
+         */
+        public static final String SOFT_BUTTONS_LEFT = "soft_buttons_left";
+
+        /**
+         * Whether to override fullscreen so statusbar always visible
+         * 0: default behavior - fullscreen hides status bar
+         * 1: override fullscreen.
+         * default: 0
+         * @hide
+         */
+        public static final String FULLSCREEN_DISABLED = "fullscreen_disabled";
+
+        /**
+         * Whether to disable lockscreen
+         * 0: default behavior - lockscreen shown when screen off
+         * 1: override lockscreen
+         * default: 0
+         * @hide
+         */
+        public static final String LOCKSCREEN_DISABLED = "lockscreen_disabled";
+
+        /**
+         * Which key triggers unhide of statusbar in fullscreen mode
+         * values described in array.xml of CMParts
+         * default: 0 (power button)
+         * @hide
+         */
+        public static final String UNHIDE_BUTTON = "unhide_button";
+
+        /**
+         * Whether to display extended option (home/menu/back) in power menu
+         * 0: dont extend (default for most devices)
+         * 1: extend
+         * default: 0 - can be overridden via CMParts config.xml for some devices
+         * @hide
+         */
+        public static final String EXTEND_PM = "extend_pm";
+
+        /**
+         * Whether or not home is displayed in the extended power menu.
+         * @hide
+         */
+        public static final String EXTEND_PM_SHOW_HOME = "extend_pm_show_home";
+
+        /**
+         * Whether or not menu is displayed in the extended power menu.
+         * @hide
+         */
+        public static final String EXTEND_PM_SHOW_MENU = "extend_pm_show_menu";
+
+        /**
+         * Whether or not back is displayed in the extended power menu.
+         * @hide
+         */
+        public static final String EXTEND_PM_SHOW_BACK = "extend_pm_show_back";
+
+        /**
+         * Reverses the volume button behavior
+         * 0: press = volume, long-press = user action
+         * 1: press = user action, long-press = volume
+         * default: 0
+         * @hide
+         */
+        public static final String REVERSE_VOLUME_BEHAVIOR = "reverse_volume_behavior";
+
+        /**
+         * Action to be executed on long-press-volume-plus while screen on
+         * 0: none / default action
+         * >0: action defined in arrays.xml of CMParts
+         * default: 0
+         * @hide
+         */
+        public static final String LONG_VOLP_ACTION = "long_volp_action";
+
+        /**
+         * Action to be executed on long-press-volume-minus while screen on
+         * 0: none / default action
+         * >0: action defined in arrays.xml of CMParts
+         * default: 0
+         * @hide
+         */
+        public static final String LONG_VOLM_ACTION = "long_volm_action";
+
+        /**
+         * Action to be executed on pressing both volume bottons while screen on
+         * 0: none / default action
+         * >0: action defined in arrays.xml of CMParts
+         * default: 0
+         * @hide
+         */
+        public static final String VOL_BOTH_ACTION = "vol_both_action";
+
+        /**
+         * Action to be executed on long-press both volume bottons while screen on
+         * 0: none / default action
+         * >0: action defined in arrays.xml of CMParts
+         * default: 0
+         * @hide
+         */
+        public static final String LONG_VOL_BOTH_ACTION = "long_vol_both_action";
+
+        /**
+         * Whether to use compact carrier label layout
+         *
+         * @hide
+         */
+        public static final String STATUS_BAR_COMPACT_CARRIER = "status_bar_compact_carrier";
+
+        /**
          * Whether to wake the screen with the trackball. The value is boolean (1 or 0).
          * @hide
          */
@@ -2156,6 +2322,12 @@ public final class Settings {
          * @hide
          */
         public static final String TRACKBALL_UNLOCK_SCREEN = "trackball_unlock_screen";
+
+        /**
+         * Whether to wake the screen with the volume keys. The value is boolean (1 or 0).
+         * @hide
+         */
+        public static final String VOLUME_WAKE_SCREEN = "volume_wake_screen";
 
         /**
          * Whether to use the custom quick unlock screen control
@@ -2201,6 +2373,12 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_STYLE_PREF = "lockscreen_style_pref";
+
+        /**
+         * Sets the incoming call accept/reject style
+         * @hide
+         */
+        public static final String IN_CALL_STYLE_PREF = "in_call_style_pref";
 
         /**
          * Pulse the Trackball with Screen On.  The value is boolean (1 or 0).
@@ -2368,6 +2546,13 @@ public final class Settings {
         public static final String EXPANDED_HIDE_ONCHANGE = "expanded_hide_onchange";
 
         /**
+         * Hide scroll bar in power widget
+         *
+         * @hide
+         */
+        public static final String EXPANDED_HIDE_SCROLLBAR = "expanded_hide_scrollbar";
+
+        /**
          * Notification Indicator Color
          *
          * @hide
@@ -2381,28 +2566,52 @@ public final class Settings {
          */
         public static final String WIDGET_BUTTONS = "expanded_widget_buttons";
 
-        /** @hide */
+        /** 
+        * Notification Power Widget - Custom Brightness Mode
+        * @hide
+        */
         public static final String EXPANDED_BRIGHTNESS_MODE = "expanded_brightness_mode";
 
-        /** @hide */
+        /** 
+        * Notification Power Widget - Custom Network Mode
+        * @hide
+        */
         public static final String EXPANDED_NETWORK_MODE = "expanded_network_mode";
 
-        /** @hide */
+        /** 
+        * Notification Power Widget - Custom Screen Timeout
+        * @hide
+        */
         public static final String EXPANDED_SCREENTIMEOUT_MODE = "expanded_screentimeout_mode";
 
-        /** @hide */
+        /** 
+        * Notification Power Widget - Custom Ring Mode
+        * @hide
+        */
         public static final String EXPANDED_RING_MODE = "expanded_ring_mode";
 
-        /** @hide */
+        /** 
+        * Notification Power Widget - Custom Torch Mode
+        * @hide
+        */
         public static final String EXPANDED_FLASH_MODE = "expanded_flash_mode";
 
-        /** @hide */
+        /** 
+        * Enables the Screen-on animation
+        * @hide
+        */
         public static final String ELECTRON_BEAM_ANIMATION_ON = "electron_beam_animation_on";
 
-        /** @hide */
+        /** 
+        * Enables the Screen-off animation
+        * @hide
+        */
         public static final String ELECTRON_BEAM_ANIMATION_OFF = "electron_beam_animation_off";
 
-        /** @hide */
+        /**
+         * Enables the overscroller (edge bounce effect on lists)
+         * @hide
+         */
         public static final String OVERSCROLL_EFFECT = "overscroll_effect";
 
         /**
@@ -3387,6 +3596,14 @@ public final class Settings {
                 "wifi_networks_available_repeat_delay";
 
         /**
+         * Whether to nofity the user of WiMAX network.
+         * If WiMAX is connected or disconnected, we will put this notification up.
+         * @hide
+         */
+        public static final String WIMAX_NETWORKS_AVAILABLE_NOTIFICATION_ON =
+                "wimax_networks_available_notification_on";
+
+        /**
          * The number of radio channels that are allowed in the local
          * 802.11 regulatory domain.
          * @hide
@@ -3523,25 +3740,10 @@ public final class Settings {
             "wifi_mobile_data_transition_wakelock_timeout_ms";
 
         /**
-         * Whether the Wimax should be on.  Only the Wimax service should touch this.
+         * Whether the Wimax should be on.  Only the WiMAX service should touch this.
+         * @hide
          */
         public static final String WIMAX_ON = "wimax_on";
-
-        /**
-         * Whether to auto connect to the last connected network.
-         * <p>
-         * If not connected and the scan results have the last connected network
-         * available then connect to the network.
-         * see {@link android.provider.Settings.Secure#WIMAX_LAST_CONNECTED_NETWORK}.
-         */
-        public static final String WIMAX_AUTO_CONNECT_ON =
-                "wimax_auto_connect_on";
-
-        /**
-         * The last connected wimax network name.
-         */
-        public static final String WIMAX_LAST_CONNECTED_NETWORK =
-                "wimax_last_connected_network";
 
         /**
          * Whether background data usage is allowed by the user. See
@@ -4340,6 +4542,12 @@ public final class Settings {
          * @hide
          */
         public static final String MVNO_ROAMING = "button_mvno_roaming_key";
+
+        /**
+         * Whether to enable permissions management.
+         * @hide
+         */
+        public static final String ENABLE_PERMISSIONS_MANAGEMENT = "enable_permissions_management";
 
         /**
          * @hide
