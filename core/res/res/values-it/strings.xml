@@ -152,6 +152,7 @@
     <string name="screen_lock" msgid="799094655496098153">"Blocco schermo"</string>
     <string name="power_off" msgid="4266614107412865048">"Spegni"</string>
     <string name="reboot_system">Riavvia</string>
+    <string name="reboot_reboot">Riavvia</string>
     <string name="shutdown_progress" msgid="2281079257329981203">"Spegnimento..."</string>
     <string name="reboot_progress">Riavvio in corso\u2026</string>
     <string name="shutdown_confirm" msgid="649792175242821353">"Il telefono verrà spento."</string>
@@ -217,6 +218,8 @@
     <string name="permdesc_receiveSms" msgid="6298292335965966117">"Consente il ricevimento e l\'elaborazione di SMS da parte dell\'applicazione. Le applicazioni dannose potrebbero monitorare i messaggi o eliminarli senza visualizzarli."</string>
     <string name="permlab_receiveMms" msgid="8894700916188083287">"ricezione MMS"</string>
     <string name="permdesc_receiveMms" msgid="4563346832000174373">"Consente il ricevimento e l\'elaborazione di MMS da parte dell\'applicazione. Le applicazioni dannose potrebbero monitorare i messaggi o eliminarli senza visualizzarli."</string>
+    <string name="permlab_receiveEmergencyBroadcast" msgid="1803477660846288089">"ricezione di trasmissioni di emergenza"</string>
+    <string name="permdesc_receiveEmergencyBroadcast" msgid="7118393393716546131">"Consente all\'applicazione di ricevere ed elaborare messaggi di trasmissioni di emergenza. Tale autorizzazione è disponibile solo per applicazioni di sistema."</string>
     <string name="permlab_sendSms" msgid="5600830612147671529">"invio SMS"</string>
     <string name="permdesc_sendSms" msgid="1946540351763502120">"Consente all\'applicazione di inviare messaggi SMS. Le applicazioni dannose potrebbero inviare messaggi a tua insaputa facendoti sostenere dei costi."</string>
     <string name="permlab_readSms" msgid="4085333708122372256">"lettura SMS o MMS"</string>
@@ -303,6 +306,8 @@
     <string name="permdesc_movePackage" msgid="6323049291923925277">"Consente a un\'applicazione di spostare risorse applicative da supporti interni a esterni e viceversa."</string>
     <string name="permlab_readLogs" msgid="6615778543198967614">"Lettura dati di registro sensibili"</string>
     <string name="permdesc_readLogs" msgid="8896449437464867766">"Consente a un\'applicazione di leggere vari file di registro del sistema per trovare informazioni generali sulle operazioni effettuate con il telefono. Tali file potrebbero contenere informazioni personali o riservate."</string>
+    <string name="permlab_preventpower">usa tasto accensione</string>
+    <string name="permdesc_preventpower">Permette ad un\'applicazione di associare una funzione al tasto accensione</string>
     <string name="permlab_diagnostic" msgid="8076743953908000342">"lettura/scrittura risorse di proprietà di diag"</string>
     <string name="permdesc_diagnostic" msgid="3121238373951637049">"Consente a un\'applicazione di leggere le risorse del gruppo diag e scrivere a esse, per esempio i file in /dev. Questa capacità potrebbe influire sulla stabilità e sicurezza del sistema. Dovrebbe essere utilizzata SOLTANTO per diagnostiche specifiche dell\'hardware effettuate dal produttore o dall\'operatore."</string>
     <string name="permlab_changeComponentState" msgid="79425198834329406">"attivazione/disattivazione componenti applicazioni"</string>

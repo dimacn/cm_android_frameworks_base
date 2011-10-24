@@ -40,7 +40,7 @@
 
 #include "CameraService.h"
 
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
 #include "gralloc_priv.h"
 #endif
 
@@ -223,21 +223,24 @@ sp<ICamera> CameraService::connect(
         hardware->setParameters(params);
     }
 #endif
+#ifdef BOARD_HAS_LGE_FFC
+    CameraParameters params(hardware->getParameters());
+    if (cameraId == 1) {
+        params.set("nv-flip-mode","vertical");
+    } else {
+        params.set("nv-flip-mode","off");
+    }
+    hardware->setParameters(params);
+#endif
+
 
     CameraInfo info;
     HAL_getCameraInfo(cameraId, &info);
 
-    /* If the FFC claims standard back-facing orientation,
-     * treat it as such. This avoid all the mirroring and rotation
-     * hooks */
-    if (info.facing == CAMERA_FACING_FRONT && info.orientation == 90) {
-        info.facing = CAMERA_FACING_BACK;
-    }
-
     client = new Client(this, cameraClient, hardware, cameraId, info.facing,
                         callingPid);
     mClient[cameraId] = client;
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
     if (client->mHardware == NULL) {
         client = NULL;
         mClient[cameraId] = NULL;
@@ -347,10 +350,12 @@ void CameraService::loadSound() {
     if (mSoundRef++) return;
 
     char value[PROPERTY_VALUE_MAX];
-    property_get("persist.camera.shutter.disable", value, "0");
-    int disableSound = atoi(value);
+    property_get("ro.camera.sound.disabled", value, "0");
+    int systemMute = atoi(value);
+    property_get("persist.sys.camera-mute", value, "0");
+    int userMute = atoi(value);
 
-    if(!disableSound) {
+    if(!systemMute && !userMute) {
         mSoundPlayer[SOUND_SHUTTER] = newMediaPlayer("/system/media/audio/ui/camera_click.ogg");
         mSoundPlayer[SOUND_RECORDING] = newMediaPlayer("/system/media/audio/ui/VideoRecord.ogg");
     }
@@ -405,7 +410,7 @@ CameraService::Client::Client(const sp<CameraService>& cameraService,
     mCameraFacing = cameraFacing;
     mClientPid = clientPid;
     mMsgEnabled = 0;
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
     if (mHardware != NULL) {
 #endif
         mUseOverlay = mHardware->useOverlay();
@@ -428,7 +433,7 @@ CameraService::Client::Client(const sp<CameraService>& cameraService,
         mOrientationChanged = false;
         cameraService->setCameraBusy(cameraId);
         cameraService->loadSound();
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
     }
 #endif
     LOG1("Client::Client X (pid %d)", callingPid);
@@ -573,7 +578,7 @@ void CameraService::Client::disconnect() {
     mHardware->release();
     // Release the held overlay resources.
     if (mUseOverlay) {
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
         /* Release previous overlay handle */
         if (mOverlay != NULL) {
             mOverlay->destroy();
@@ -621,17 +626,17 @@ status_t CameraService::Client::setPreviewDisplay(const sp<ISurface>& surface) {
     mOverlayRef = 0;
     // If preview has been already started, set overlay or register preview
     // buffers now.
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
     if (mHardware->previewEnabled() || mUseOverlay) {
 #else
     if (mHardware->previewEnabled()) {
 #endif
         if (mUseOverlay) {
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
             if (mSurface != NULL) {
 #endif
                 result = setOverlay();
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
             }
 #endif
         } else if (mSurface != 0) {
@@ -689,7 +694,7 @@ status_t CameraService::Client::setOverlay() {
         sp<Overlay> dummy;
         mHardware->setOverlay(dummy);
         mOverlayRef = 0;
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
         if (mOverlay != NULL) {
             mOverlay->destroy();
         }
@@ -710,8 +715,10 @@ status_t CameraService::Client::setOverlay() {
             // process of being destroyed.
             for (int retry = 0; retry < 50; ++retry) {
                 mOverlayRef = mSurface->createOverlay(w, h,
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP)
                                                       HAL_PIXEL_FORMAT_YCbCr_420_SP,
+#elif defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
+                                                      HAL_PIXEL_FORMAT_YCrCb_420_SP,
 #else
                                                       OVERLAY_FORMAT_DEFAULT,
 #endif
@@ -724,7 +731,7 @@ status_t CameraService::Client::setOverlay() {
                 LOGE("Overlay Creation Failed!");
                 return -EINVAL;
             }
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
             mOverlay = new Overlay(mOverlayRef);
             result = mHardware->setOverlay(mOverlay);
 #else
@@ -815,11 +822,11 @@ status_t CameraService::Client::startPreviewMode() {
         if (mSurface != 0) {
             result = setOverlay();
         }
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
         result = mHardware->startPreview();
 #endif
         if (result != NO_ERROR) return result;
-#ifndef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if !defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) && !defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
         result = mHardware->startPreview();
 #endif
     } else {
@@ -888,7 +895,7 @@ void CameraService::Client::stopPreview() {
 
     if (mSurface != 0 && !mUseOverlay) {
         mSurface->unregisterBuffers();
-#ifdef USE_OVERLAY_FORMAT_YCbCr_420_SP
+#if defined(USE_OVERLAY_FORMAT_YCbCr_420_SP) || defined(USE_OVERLAY_FORMAT_YCrCb_420_SP)
     } else {
         mOverlayW = 0;
         mOverlayH = 0;
@@ -978,7 +985,17 @@ status_t CameraService::Client::setParameters(const String8& params) {
     status_t result = checkPidAndHardware();
     if (result != NO_ERROR) return result;
 
+
     CameraParameters p(params);
+
+#ifdef BOARD_HAS_LGE_FFC
+    /* Do not set nvidia focus area to 0 */
+    if(p.get("nv-areas-to-focus")!= NULL &&
+       !strncmp(p.get("nv-areas-to-focus"),"0",1)) {
+        p.remove("nv-areas-to-focus");
+    }
+#endif
+
     return mHardware->setParameters(p);
 }
 
@@ -991,6 +1008,32 @@ String8 CameraService::Client::getParameters() const {
     LOG1("getParameters (pid %d) (%s)", getCallingPid(), params.string());
     return params;
 }
+
+#ifdef MOTO_CUSTOM_PARAMETERS
+// set preview/capture custom parameters - key/value pairs
+status_t CameraService::Client::setCustomParameters(const String8& params) {
+    LOG1("setCustomParameters (pid %d) (%s)", getCallingPid(), params.string());
+
+    Mutex::Autolock lock(mLock);
+    status_t result = checkPidAndHardware();
+    if (result != NO_ERROR) return result;
+
+
+    CameraParameters p(params);
+
+    return mHardware->setCustomParameters(p);
+}
+
+// get preview/capture custom parameters - key/value pairs
+String8 CameraService::Client::getCustomParameters() const {
+    Mutex::Autolock lock(mLock);
+    if (checkPidAndHardware() != NO_ERROR) return String8();
+
+    String8 params(mHardware->getCustomParameters().flatten());
+    LOG1("getCustomParameters (pid %d) (%s)", getCallingPid(), params.string());
+    return params;
+}
+#endif
 
 status_t CameraService::Client::sendCommand(int32_t cmd, int32_t arg1, int32_t arg2) {
     LOG1("sendCommand (pid %d)", getCallingPid());
@@ -1395,6 +1438,14 @@ void CameraService::Client::copyFrameAndPostCopiedFrame(
 }
 
 int CameraService::Client::getOrientation(int degrees, bool mirror) {
+#ifdef BOARD_HAS_LGE_FFC
+    /* FLIP_* generate weird behaviors that don't include flipping */
+    LOGV("Asking orientation %d with %d",degrees,mirror);
+    if (mirror && 
+          degrees == 270 || degrees == 90)  // ROTATE_90 just for these orientations
+            return HAL_TRANSFORM_ROT_90;
+    mirror = 0;
+#endif
     if (!mirror) {
         if (degrees == 0) return 0;
         else if (degrees == 90) return HAL_TRANSFORM_ROT_90;

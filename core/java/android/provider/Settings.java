@@ -1081,7 +1081,7 @@ public final class Settings {
         public static void getConfiguration(ContentResolver cr, Configuration outConfig) {
             outConfig.fontScale = Settings.System.getFloat(
                 cr, FONT_SCALE, outConfig.fontScale);
-            if (outConfig.fontScale < 0) {
+            if (outConfig.fontScale <= 0) {
                 outConfig.fontScale = 1;
             }
         }
@@ -1900,26 +1900,64 @@ public final class Settings {
         public static final String USER_DEFINED_KEY3_APP = "user_defined_key3_app";
 
         /**
+         * Stores the uri of the define application for the envelope key
+         * @hide
+         */
+        public static final String USER_DEFINED_KEY_ENVELOPE = "user_defined_key_envelope";
+
+        /**
+         * Stores the uri of the define application for the explorer key
+         * @hide
+         */
+        public static final String USER_DEFINED_KEY_EXPLORER = "user_defined_key_explorer";
+
+        /**
          * Specifies whether to prompt on the power dialog
          * @hide
          */
         public static final String POWER_DIALOG_PROMPT = "power_dialog_prompt";
 
         /**
-         * How many ms to delay before enabling the screen lock when the screen
-         * goes off due to timeout
-         *
+         * Specifies whether to show share dialog after
+         * taking screenshot
          * @hide
          */
-        public static final String SCREEN_LOCK_TIMEOUT_DELAY = "screen_lock_timeout_delay";
+        public static final String SHARE_SCREENSHOT = "share_screenshot";
 
         /**
-         * How many ms to delay before enabling the screen lock when the screen
-         * is turned off by the user
-         *
+         * How many ms to delay before enabling the security screen lock when
+         * the screen goes off due to timeout
          * @hide
          */
-        public static final String SCREEN_LOCK_SCREENOFF_DELAY = "screen_lock_screenoff_delay";
+        public static final String SCREEN_LOCK_SECURITY_TIMEOUT_DELAY = "screen_lock_security_timeout_delay";
+
+        /**
+         * How many ms to delay before enabling the security screen lock when
+         * the screen is turned off by the user
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SECURITY_SCREENOFF_DELAY = "screen_lock_security_screenoff_delay";
+
+        /**
+         * Whether to use a separate delay for "slide to unlock" and security
+         * lock
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SLIDE_DELAY_TOGGLE = "screen_lock_slide_delay_toggle";
+
+        /**
+         * How many ms to delay before enabling the "slide to unlock" screen
+         * lock when the screen goes off due to timeout
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SLIDE_TIMEOUT_DELAY = "screen_lock_slide_timeout_delay";
+
+        /**
+         * How many ms to delay before enabling the "slide to unlock" screen
+         * lock when the screen is turned off by the user
+         * @hide
+         */
+        public static final String SCREEN_LOCK_SLIDE_SCREENOFF_DELAY = "screen_lock_slide_screenoff_delay";
 
         /**
          * Whether the audible DTMF tones are played by the dialer when dialing. The value is
@@ -2217,14 +2255,14 @@ public final class Settings {
         public static final String STATUS_BAR_AM_PM = "status_bar_am_pm";
 
         /**
-         * Whether to show the CM battery percentage implementation instead
-         * of the stock battery icon
-         * 0: don't show / show stock icon instead
-         * 1: show cm battery / dont show stock icon
+         * Display style of the status bar battery information
+         * 0: Display the stock battery information
+         * 1: Display cm battery percentage implementation / dont show stock icon
+         * 2: Hide the battery information
          * default: 0
          * @hide
          */
-        public static final String STATUS_BAR_CM_BATTERY = "status_bar_cm_battery";
+        public static final String STATUS_BAR_BATTERY = "status_bar_battery";
 
         /**
          * Whether to show the clock in status bar
@@ -2235,6 +2273,16 @@ public final class Settings {
          * @hide
          */
         public static final String STATUS_BAR_CLOCK = "status_bar_clock";
+
+        /**
+         * Whether to show the signal text or signal bars.
+         * default: 0
+         * 0: show signal bars
+         * 1: show signal text numbers
+         * 2: show signal text numbers w/small dBm appended
+         * @hide
+         */
+        public static final String STATUS_BAR_CM_SIGNAL_TEXT = "status_bar_cm_signal";
 
         /**
          * Whether to display the status bar on top or bottom
@@ -2406,6 +2454,14 @@ public final class Settings {
         public static final String STATUS_BAR_BRIGHTNESS_TOGGLE = "status_bar_brightness_toggle";
 
         /**
+         * Whether to display headset icon on status bar when headset is plugged in
+         * 0: headset icon is never displayed
+         * 1: headset icon is displayed when headset is plugged in
+         * @hide
+         */
+        public static final String STATUS_BAR_HEADSET = "status_bar_headset";
+
+        /**
          * Whether to wake the screen with the trackball. The value is boolean (1 or 0).
          * @hide
          */
@@ -2418,10 +2474,22 @@ public final class Settings {
         public static final String TRACKBALL_UNLOCK_SCREEN = "trackball_unlock_screen";
 
         /**
+         * Whether to unlock the screen with the slide-out keyboard. The value is boolean (1 or 0).
+         * @hide
+         */
+        public static final String SLIDER_UNLOCK_SCREEN = "slider_unlock_screen";
+
+        /**
          * Whether to wake the screen with the volume keys. The value is boolean (1 or 0).
          * @hide
          */
         public static final String VOLUME_WAKE_SCREEN = "volume_wake_screen";
+
+        /**
+         * Whether the lockscreen should be disabled if security is on
+         * @hide
+         */
+        public static final String LOCKSCREEN_DISABLE_ON_SECURITY = "lockscreen_disable_on_security";
 
         /**
          * Whether to use the custom quick unlock screen control
@@ -2443,12 +2511,29 @@ public final class Settings {
         public static final String LOCKSCREEN_CUSTOM_APP_ACTIVITY = "lockscreen_custom_app_activity";
 
         /**
+         * Ring Apps to launch with ring style and custom app toggle enabled
+         * @hide
+         */
+        public static final String[] LOCKSCREEN_CUSTOM_RING_APP_ACTIVITIES = new String[] {
+            "lockscreen_custom_app_activity_1",
+            "lockscreen_custom_app_activity_2",
+            "lockscreen_custom_app_activity_3",
+            "lockscreen_custom_app_activity_4"
+        };
+
+        /**
          * 1: Show custom app icon (currently cm logo) as with new patch
          * 2: Show messaging app icon as in old lockscreen
          * possibly more in the future (if more png files are drawn)
          * @hide
          */
         public static final String LOCKSCREEN_CUSTOM_ICON_STYLE = "lockscreen_custom_icon_style";
+
+        /**
+         * Modify lockscreen widgets layout (time,date,carrier,msg,status)
+         * @hide
+         */
+        public static final String LOCKSCREEN_WIDGETS_LAYOUT = "lockscreen_widgets_layout";
 
         /**
          * When enabled, rotary lockscreen switches app starter and unlock, so you can drag down to unlock
@@ -2467,6 +2552,12 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_STYLE_PREF = "lockscreen_style_pref";
+
+        /**
+         * Sets the lockscreen background style
+         * @hide
+         */
+        public static final String LOCKSCREEN_BACKGROUND = "lockscreen_background";
 
         /**
          * Sets the incoming call accept/reject style
@@ -2505,22 +2596,11 @@ public final class Settings {
          public static final String TRACKBALL_NOTIFICATION_BLEND_COLOR = "trackball_blend_color";
 
         /**
-         * Trackball Notification Colors. The value is String  pkg=color|pkg=color
+         * Trackball Notification Colors. The value is a String, containing a list of packages:
+         * pkg=color=blink=mode=category|pkg=color=blink=mode=category|...
          * @hide
          */
-        public static final String NOTIFICATION_PACKAGE_COLORS = "|";
-
-        /**
-         * Trackball Notification List. The value is String  pkg|pkg
-         * @hide
-         */
-        public static final String NOTIFICATION_PACKAGE_LIST = "|";
-
-        /**
-         * Trackball Notification Colors Debugging. The value is boolean (1 or 0)
-         * @hide
-         */
-        public static final String NOTIFICATION_PACKAGE_COLORS_GET_PACK = "0";
+        public static final String NOTIFICATION_PACKAGE_COLORS = "notification_custom_led_colors";
 
         /**
          * Whether to unlock the menu key.  The value is boolean (1 or 0).
@@ -2569,6 +2649,30 @@ public final class Settings {
          * @hide
          */
         public static final String LOCKSCREEN_ALWAYS_BATTERY = "lockscreen_always_battery";
+
+        /**
+         * Whether to show the next calendar event
+         * @hide
+         */
+        public static final String LOCKSCREEN_CALENDAR_ALARM = "lockscreen_calendar_alarm";
+
+        /**
+         * Which calendars to look for events
+         * @hide
+         */
+        public static final String LOCKSCREEN_CALENDARS = "lockscreen_calendars";
+
+        /**
+         * How far in the future to look for events
+         * @hide
+         */
+        public static final String LOCKSCREEN_CALENDAR_LOOKAHEAD = "lockscreen_calendar_lookahead";
+
+        /**
+         * Whether to find only events with reminders
+         * @hide
+         */
+        public static final String LOCKSCREEN_CALENDAR_REMINDERS_ONLY = "lockscreen_calendar_reminders_only";
 
         /**
          * Whether to use lockscreen music controls
@@ -3737,27 +3841,6 @@ public final class Settings {
          * @hide
          */
         public static final String WIFI_SAVED_STATE = "wifi_saved_state";
-
-        /**
-         * AP SSID
-         *
-         * @hide
-         */
-        public static final String WIFI_AP_SSID = "wifi_ap_ssid";
-
-        /**
-         * AP security
-         *
-         * @hide
-         */
-        public static final String WIFI_AP_SECURITY = "wifi_ap_security";
-
-        /**
-         * AP passphrase
-         *
-         * @hide
-         */
-        public static final String WIFI_AP_PASSWD = "wifi_ap_passwd";
 
         /**
          * The acceptable packet loss percentage (range 0 - 100) before trying

@@ -71,7 +71,7 @@ import java.util.Collections;
 import android.os.SystemClock;
 
 /* NITZ stuffs */
-import java.util.TimeZone;
+import java.util.Date;
 import java.text.SimpleDateFormat;
 
 /**
@@ -87,26 +87,62 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
 
     public LGEStarRIL(Context context, int networkMode, int cdmaSubscription) {
         super(context, networkMode, cdmaSubscription);
+        /* The star needs to ignore SCREEN_X states, in order to keep the
+         * batt updates running. The others don't need this */
+        if (SystemProperties.get("ro.build.product").indexOf("p99") == 0) {
+            context.unregisterReceiver(mIntentReceiver);
+            BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+                @Override
+                    public void onReceive(Context context, Intent intent) {
+                        if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                            Log.d(LOG_TAG, "RIL received ACTION_SCREEN_ON Intent -> SKIP");
+                        } else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                            Log.d(LOG_TAG, "RIL received ACTION_SCREEN_OFF Intent -> SKIP");
+                        } else {
+                            Log.w(LOG_TAG, "RIL received unexpected Intent: " + intent.getAction());
+                        }
+                    }
+            };
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_SCREEN_ON);
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
+            context.registerReceiver(mIntentReceiver, filter);
+        } else {
+            BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+                @Override
+                    public void onReceive(Context context, Intent intent) {
+                        if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                            Log.d(LOG_TAG, "Enabling FAST_DORMANCY");
+                            RILRequest rrSPR = RILRequest.obtain(
+                                    279, null);
+                            rrSPR.mp.writeInt(1);
+                            rrSPR.mp.writeInt(1);
+                            send(rrSPR);
+                        }
+                    }
+            };
+            IntentFilter filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
+            context.registerReceiver(mIntentReceiver, filter);
+        }
     }
 
     protected boolean mPrepSetupPending = true;
     public void
     setRadioPower(boolean on, Message result) {
-        RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_RADIO_POWER, result);
-
-        rr.mp.writeInt(1);
-        rr.mp.writeInt(on ? 1 : 0);
-
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
-
-        send(rr);
-
         if(mPrepSetupPending) {
             if (SystemProperties.get("ro.build.product").equals("p999")) {
                 /* Set radio access tech */
                 RILRequest rrSPR = RILRequest.obtain(
                         296, null);
+                rrSPR.mp.writeInt(1);
+                rrSPR.mp.writeInt(1);
+                if (RILJ_LOGD) riljLog(rrSPR.serialString() + "> "
+                        + requestToString(rrSPR.mRequest));
+                send(rrSPR);
+                /* Set time zone reporting */
+                rrSPR = RILRequest.obtain(
+                        189, null);
                 rrSPR.mp.writeInt(1);
                 rrSPR.mp.writeInt(1);
                 if (RILJ_LOGD) riljLog(rrSPR.serialString() + "> "
@@ -123,12 +159,33 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
                         + requestToString(rrCs.mRequest));
                 send(rrCs);
             }
-
+            /* Get charset */
+            RILRequest rrGCS = RILRequest.obtain(
+                    152, null);
+            if (RILJ_LOGD) riljLog(rrGCS.serialString() + "> "
+                    + requestToString(rrGCS.mRequest));
+            send(rrGCS);
         }
+        RILRequest rr
+                = RILRequest.obtain(RIL_REQUEST_RADIO_POWER, result);
+
+        rr.mp.writeInt(3);
+        rr.mp.writeInt(on ? 1 : 0);
+        rr.mp.writeInt(0);
+        rr.mp.writeInt(0);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+
     }
 
     protected void LGEswitchToRadioState(RadioState newState) {
 
+        if (!mPrepSetupPending && newState == RadioState.RADIO_UNAVAILABLE) {
+            /* We seem to have lost the radio, reset the setup flag */
+	    mPrepSetupPending = true;
+        }
         if (newState.isOn() && mPrepSetupPending) {
             RILRequest rrPnt = RILRequest.obtain(
                     RIL_REQUEST_SET_PREFERRED_NETWORK_TYPE, null);
@@ -140,14 +197,6 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
 
             send(rrPnt);
 
-            /* Request service line */
-            RILRequest rrSL = RILRequest.obtain(
-                    (SystemProperties.get("ro.build.product").equals("p999") ? 294 : 286), null);
-            rrSL.mp.writeInt(0);
-            if (RILJ_LOGD) riljLog(rrSL.serialString() + "> "
-                    + requestToString(rrSL.mRequest));
-            send(rrSL);
-
             /* Set "ready" */
             RILRequest rrSc = RILRequest.obtain(
                     (SystemProperties.get("ro.build.product").equals("p999") ? 304 : 298), null);
@@ -156,6 +205,15 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
             if (RILJ_LOGD) riljLog(rrSc.serialString() + "> "
                     + requestToString(rrSc.mRequest));
             send(rrSc);
+
+            /* Use this to initialize network state trackers */
+            RILRequest rrSSt = RILRequest.obtain(
+                    RIL_REQUEST_SCREEN_STATE, null);
+            rrSSt.mp.writeInt(1);
+            rrSSt.mp.writeInt(1);
+            if (RILJ_LOGD) riljLog(rrSSt.serialString() + "> "
+                    + requestToString(rrSSt.mRequest));
+            send(rrSSt);
 
             mPrepSetupPending = false;
 
@@ -230,6 +288,18 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
             String user, String password, String authType, String protocol,
             Message result) {
 
+        if (SystemProperties.get("ro.build.product").equals("p970")) {
+            /* Set GPRS class */
+            RILRequest rrCs = RILRequest.obtain(
+                    273, null);
+            rrCs.mp.writeInt(2);
+            rrCs.mp.writeInt(1);
+                rrCs.mp.writeInt(1);
+            if (RILJ_LOGD) riljLog(rrCs.serialString() + "> "
+                    + requestToString(rrCs.mRequest));
+            send(rrCs);
+        }
+
         saveDataCall = result;
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_SETUP_DATA_CALL, result);
@@ -297,6 +367,45 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
         rr.mp.writeString(operatorNumeric);
 
         send(rr);
+    }
+
+    public void
+    getNetworkSelectionMode(Message response) {
+        RILRequest rr
+                = RILRequest.obtain(RIL_REQUEST_QUERY_NETWORK_SELECTION_MODE,
+                                    response);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+        /* ADAPTED_NETWORK_NAME */
+        rr
+                = RILRequest.obtain(143, null);
+
+        rr.mp.writeInt(1);
+        rr.mp.writeInt(6);
+
+        send(rr);
+    }
+
+    public void
+    getIMSI(Message result) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMSI, result);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() +
+                              "> getIMSI:RIL_REQUEST_GET_IMSI " +
+                              RIL_REQUEST_GET_IMSI +
+                              " " + requestToString(rr.mRequest));
+
+        send(rr);
+
+        /* Request service line */
+        RILRequest rrSL = RILRequest.obtain(
+                (SystemProperties.get("ro.build.product").equals("p999") ? 294 : 286), null);
+        rrSL.mp.writeInt(0);
+        if (RILJ_LOGD) riljLog(rrSL.serialString() + "> "
+                + requestToString(rrSL.mRequest));
+        send(rrSL);
     }
 
     protected void
@@ -425,8 +534,12 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
             case RIL_REQUEST_EXIT_EMERGENCY_CALLBACK_MODE: ret = responseVoid(p); break;
             case RIL_REQUEST_REPORT_SMS_MEMORY_STATUS: ret = responseVoid(p); break;
             case RIL_REQUEST_REPORT_STK_SERVICE_IS_RUNNING: ret = responseVoid(p); break;
+            case 143: ret =  responseVoid(p); break; // ADAPTED_NETWORK_NAME
+            case 152: ret =  responseString(p); break; // RIL_REQUEST_GET_TE_CHARACTER_SET
             case 161: ret =  responsePdpAddress(p); break; // SHOW_PDP_ADDRESS
+            case 189: ret =  responseVoid(p); break; // RIL_REQUEST_SET_TIME_ZONE_REPORTING
             case 273: ret =  responseVoid(p); break; // SET_GMM_ATTACH_MODE
+            case 279: ret =  responseVoid(p); break; // FAST_DORMANCY
             case 286: ret =  responseVoid(p); break; // GET_SERVICE_LINE
             case 294: ret =  responseVoid(p); break; // GET_SERVICE_LINE
             case 296: ret =  responseVoid(p); break; // RIL_REQUEST_SET_PRODUCT_RAT
@@ -867,37 +980,42 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
 
     protected Object
     responseNitz(Parcel p) {
-        int num;
-        String parceldata;
+        int num, dst=0;
+        String parceldata, parcelextra;
         String response;
         SimpleDateFormat dateFormatter;
         SimpleDateFormat dateParser;
-        boolean isP990 = SystemProperties.get("ro.build.product").equals("p990");
-        String[] tzIds;
+        boolean isIfx = !SystemProperties.get("ro.build.product").equals("p999");
 
         num = p.readInt(); // TZ diff in quarter-hours
 
         /* Get the actual date string */
         parceldata = p.readString();
 
-        /* P990 needs some additional hax... */
-        tzIds = TimeZone.getAvailableIDs((num/4)*3600*1000);
-        if (isP990) {
+        /* Infineon modems need some additional hax... */
+        if (isIfx) {
+            /* Store DST before cropping */
+            parcelextra = parceldata.substring(parceldata.lastIndexOf(",")+1);
+            if (parcelextra != null) dst = Integer.parseInt(parcelextra);
             parceldata = parceldata.substring(0,(parceldata.lastIndexOf(",")));
         }
+
+        int offset = num*15*60*1000;	// DST corrected
 
         /* WTH... Date may come with 4 digits in the year, reduce to 2 */
         try {
             dateFormatter = new SimpleDateFormat("yy/MM/dd,HH:mm:ss");
             dateParser = new SimpleDateFormat("yy/MM/dd,HH:mm:ss");
 
-            /* P990 delivers localtime, convert to UTC */
-            if (isP990) {
-                dateFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
-                dateParser.setTimeZone(TimeZone.getTimeZone(tzIds[0]));
+            /* Ifx delivers localtime, convert to UTC */
+            if (isIfx) {
+                /* Directly calculate UTC time using DST Offset */
+                long when = dateParser.parse(parceldata).getTime() - offset;
+                Date d = new Date(when);
+                response = dateFormatter.format(d);
+            } else {
+                response = dateFormatter.format(dateParser.parse(parceldata));
             }
-
-            response = dateFormatter.format(dateParser.parse(parceldata));
 
         } catch (java.text.ParseException tpe) {
             Log.d(LOG_TAG, "NITZ TZ conversion failed: " + tpe);
@@ -905,8 +1023,11 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
         }
 
         /* Append the timezone */
-        response = response + ((num < 0) ? "" : "+");
-        response = response + num;
+        response = response + ((num < 0) ? "" : "+") + num;
+        if (isIfx) {
+            /* Add DST */
+            response = response + "," + dst;
+        }
 
         return response;
     }
@@ -1017,7 +1138,10 @@ public class LGEStarRIL extends RIL implements CommandsInterface {
             case RIL_REQUEST_EXIT_EMERGENCY_CALLBACK_MODE: return "REQUEST_EXIT_EMERGENCY_CALLBACK_MODE";
             case RIL_REQUEST_REPORT_SMS_MEMORY_STATUS: return "RIL_REQUEST_REPORT_SMS_MEMORY_STATUS";
             case RIL_REQUEST_REPORT_STK_SERVICE_IS_RUNNING: return "RIL_REQUEST_REPORT_STK_SERVICE_IS_RUNNING";
+            case 152: return "RIL_REQUEST_GET_TE_CHARACTER_SET";
+            case 143: return "ADAPTED_NETWORK_NAME";
             case 161: return "SHOW_PDP_ADDRESS";
+            case 189: return "RIL_REQUEST_SET_TIME_ZONE_REPORTING";
             case 273: return "SET_GMM_ATTACH_MODE";
             case 286: return "GET_SERVICE_LINE"; // p990
             case 294: return "GET_SERVICE_LINE"; // p999
