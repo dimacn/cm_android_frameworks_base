@@ -20,7 +20,7 @@ public class BrightnessButton extends PowerButton {
      * Minimum and maximum brightnesses. Don't go to 0 since that makes the
      * display unusable
      */
-    private static final int MINIMUM_BACKLIGHT = android.os.Power.BRIGHTNESS_DIM + 10;
+    private static final int MINIMUM_BACKLIGHT = android.os.Power.BRIGHTNESS_DIM;
     private static final int MAXIMUM_BACKLIGHT = android.os.Power.BRIGHTNESS_ON;
     private static int DEFAULT_BACKLIGHT = (int) (android.os.Power.BRIGHTNESS_ON * 0.4f);
 
