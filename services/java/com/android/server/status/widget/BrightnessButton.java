@@ -22,11 +22,11 @@ public class BrightnessButton extends PowerButton {
      */
     private static final int MINIMUM_BACKLIGHT = android.os.Power.BRIGHTNESS_DIM;
     private static final int MAXIMUM_BACKLIGHT = android.os.Power.BRIGHTNESS_ON;
-    private static int DEFAULT_BACKLIGHT = (int) (android.os.Power.BRIGHTNESS_ON * 0.4f);
+    private static int DEFAULT_BACKLIGHT = (int) (android.os.Power.BRIGHTNESS_ON * 0.25f);
 
-    private static int LOW_BACKLIGHT = (int) (android.os.Power.BRIGHTNESS_ON * 0.25f);
-    private static int MID_BACKLIGHT = (int) (android.os.Power.BRIGHTNESS_ON * 0.5f);
-    private static int HIGH_BACKLIGHT = (int) (android.os.Power.BRIGHTNESS_ON * 0.75f);
+    private static int BACKLIGHT_1 = (int) (android.os.Power.BRIGHTNESS_ON * 0.06f);
+    private static int BACKLIGHT_2 = (int) (android.os.Power.BRIGHTNESS_ON * 0.2f);
+    private static int BACKLIGHT_3 = (int) (android.os.Power.BRIGHTNESS_ON * 0.45f);
 
     private static final int AUTO_BACKLIGHT = -1;
 
@@ -117,44 +117,34 @@ Low High Max
 
         if (isAutomaticModeSupported(context) && isBrightnessSetToAutomatic(context)) {
             if (currentMode == MODE_AUTO_LOW_MAX) {
-                return LOW_BACKLIGHT;
+                return DEFAULT_BACKLIGHT;
             } else {
                 return getMinBacklight(context);
             }
-        } else if (brightness < LOW_BACKLIGHT) {
-            if (currentMode == MODE_AUTO_LOW_MAX) {
-                return LOW_BACKLIGHT;
-            } else if (currentMode == MODE_MIN_MAX) {
-                return MAXIMUM_BACKLIGHT;
-            } else {
-                return DEFAULT_BACKLIGHT;
-            }
+        } else if (currentMode == MODE_AUTO_MIN_LOW_MID_HIGH_MAX) {
+	    if (brightness < BACKLIGHT_1) {
+		return BACKLIGHT_1;
+	    } else if (brightness < BACKLIGHT_2) {
+		return BACKLIGHT_2;
+	    } else if (brightness < BACKLIGHT_3) {
+		return BACKLIGHT_3;
+	    } else if (brightness < MAXIMUM_BACKLIGHT) {
+		return MAXIMUM_BACKLIGHT;
+	    } else {
+		return MINIMUM_BACKLIGHT;
+	    }
         } else if (brightness < DEFAULT_BACKLIGHT) {
-            if (currentMode == MODE_AUTO_MIN_DEF_MAX) {
+            if (currentMode == MODE_MIN_MAX) {
+                return MAXIMUM_BACKLIGHT;
+            } else {
                 return DEFAULT_BACKLIGHT;
-            } else if (currentMode == MODE_AUTO_LOW_MAX || currentMode == MODE_MIN_MAX) {
-                return MAXIMUM_BACKLIGHT;
-            } else {
-                return MID_BACKLIGHT;
-            }
-        } else if (brightness < MID_BACKLIGHT) {
-            if (currentMode == MODE_AUTO_MIN_LOW_MID_HIGH_MAX) {
-                return MID_BACKLIGHT;
-            } else {
-                return MAXIMUM_BACKLIGHT;
-            }
-        } else if (brightness < HIGH_BACKLIGHT) {
-            if (currentMode == MODE_AUTO_MIN_LOW_MID_HIGH_MAX) {
-                return HIGH_BACKLIGHT;
-            } else {
-                return MAXIMUM_BACKLIGHT;
             }
         } else if (brightness < MAXIMUM_BACKLIGHT) {
             return MAXIMUM_BACKLIGHT;
         } else if (isAutomaticModeSupported(context) && currentMode!=MODE_MIN_MAX) {
             return AUTO_BACKLIGHT;
         } else if(currentMode == MODE_AUTO_LOW_MAX){
-            return LOW_BACKLIGHT;
+            return DEFAULT_BACKLIGHT;
         } else {
             return getMinBacklight(context);
         }
@@ -257,25 +247,25 @@ Low High Max
         int brightness = Settings.System.getInt(context.getContentResolver(),
                 Settings.System.SCREEN_BRIGHTNESS,0);
 
-        if (brightness < LOW_BACKLIGHT) {
-            return PowerButton.STATE_DISABLED;
+        if (currentMode == MODE_AUTO_MIN_LOW_MID_HIGH_MAX) {
+	    if (brightness < BACKLIGHT_2) {
+		return PowerButton.STATE_DISABLED;
+	    } else if (brightness < BACKLIGHT_3) {
+		return PowerButton.STATE_TURNING_OFF;
+	    } else if (brightness < MAXIMUM_BACKLIGHT) {
+		return PowerButton.STATE_TURNING_ON;
+	    } else {
+		return PowerButton.STATE_ENABLED;
+	    }
         } else if (brightness < DEFAULT_BACKLIGHT) {
             return PowerButton.STATE_DISABLED;
-        } else if (brightness < MID_BACKLIGHT) {
-            if (currentMode == MODE_AUTO_MIN_LOW_MID_HIGH_MAX) {
-                return PowerButton.STATE_DISABLED;
-            } else {
-                return PowerButton.STATE_TURNING_OFF;
-            }
-        } else if (brightness < HIGH_BACKLIGHT) {
-            if (currentMode == MODE_AUTO_MIN_LOW_MID_HIGH_MAX) {
-                return PowerButton.STATE_TURNING_OFF;
-            } else {
-                return PowerButton.STATE_TURNING_ON;
-            }
         } else if (brightness < MAXIMUM_BACKLIGHT) {
-            return PowerButton.STATE_TURNING_ON;
-        } else {
+	    if (currentMode == MODE_AUTO_LOW_MAX) {
+		return PowerButton.STATE_DISABLED;
+	    } else {
+                return PowerButton.STATE_TURNING_ON;
+	    }
+	} else {
             return PowerButton.STATE_ENABLED;
         }
     }
